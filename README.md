@@ -6,3 +6,4 @@ A bot for Place: IPv6 (https://ssi.place/timr/)
 - multi-threading
 - drawing pixels
 - drawing images
+- drawing a series of frames
