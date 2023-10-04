@@ -1,10 +1,7 @@
-mod lib;
-
-use clap::{Args, Parser, Subcommand};
-use ipv6_placer::{build_pixels_from_image, optimize_pixels, Pixel, Placer};
-use socket2::{Domain, Protocol, Socket, Type};
+use clap::{Parser, Subcommand};
+use ipv6_placer::{build_pixels_from_image, Pixel, Placer};
 use std::{
-    net::{Ipv6Addr, SocketAddrV6},
+    net::Ipv6Addr,
     sync::{Arc, Mutex},
     time::Duration,
 };

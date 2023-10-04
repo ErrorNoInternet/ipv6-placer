@@ -20,15 +20,11 @@ pub struct Pixel {
 #[derive(Clone, Debug)]
 pub struct Placer {
     address: Ipv6Addr,
-    persistent: bool,
 }
 
 impl Placer {
     pub fn new(address: Ipv6Addr) -> Self {
-        Self {
-            address,
-            persistent: false,
-        }
+        Self { address }
     }
 
     pub fn build_address(&self, pixel: &Pixel) -> Ipv6Addr {
