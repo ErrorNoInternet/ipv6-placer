@@ -46,7 +46,7 @@ impl Placer {
         let socket = match Socket::new(Domain::IPV6, Type::DGRAM, Some(Protocol::ICMPV6)) {
             Ok(socket) => socket,
             Err(error) => {
-                println!("unable to create raw socket: {error}");
+                println!("unable to create socket: {error}");
                 return;
             }
         };
