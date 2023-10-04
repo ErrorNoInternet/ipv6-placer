@@ -70,7 +70,7 @@ fn main() {
             {
                 Ok(image_pixels) => image_pixels,
                 Err(error) => {
-                    println!("unable to open image file {error:?}");
+                    println!("unable to open image file: {error:?}");
                     return;
                 }
             };
