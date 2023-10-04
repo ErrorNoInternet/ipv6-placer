@@ -66,8 +66,14 @@ fn main() {
             image_x_offset,
             image_y_offset,
         } => {
-            let image_pixels =
-                build_pixels_from_image(&image, image_x_offset, image_y_offset).unwrap();
+            let image_pixels = match build_pixels_from_image(&image, image_x_offset, image_y_offset)
+            {
+                Ok(image_pixels) => image_pixels,
+                Err(error) => {
+                    println!("unable to open image file {error:?}");
+                    return;
+                }
+            };
             let active_threads = Arc::new(Mutex::new(0));
             let mut current_batch = Vec::new();
             for pixel in image_pixels {
