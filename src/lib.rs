@@ -61,7 +61,6 @@ impl Placer {
         if optimize {
             pixels = optimize_pixels(&pixels);
         };
-        let mut sent = 0;
         for pixel in pixels {
             loop {
                 if socket
@@ -73,7 +72,6 @@ impl Placer {
                 {
                     break;
                 }
-                sent += 1;
             }
         }
     }
