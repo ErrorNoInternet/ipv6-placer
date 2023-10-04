@@ -9,12 +9,12 @@ pub enum PlacerError {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Pixel {
-    x: u16,
-    y: u16,
-    r: u16,
-    g: u16,
-    b: u16,
-    big: bool,
+    pub x: u16,
+    pub y: u16,
+    pub r: u16,
+    pub g: u16,
+    pub b: u16,
+    pub big: bool,
 }
 
 #[derive(Clone, Debug)]
