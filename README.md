@@ -7,3 +7,8 @@ A bot for Place: IPv6 (https://ssi.place/timr/)
 - drawing pixels
 - drawing images
 - drawing a series of frames
+
+## To-do
+- PPS limit
+- persistence
+- gradual erase
