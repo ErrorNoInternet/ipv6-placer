@@ -105,7 +105,7 @@ fn main() {
                         return;
                     }
                 };
-            placer.place_batch(&first_frame_pixels, true);
+            placer.place_batch(&first_frame_pixels, !arguments.no_optimize);
 
             let mut old_frame_pixels = first_frame_pixels;
             for frame in &frame_list[1..] {
@@ -131,9 +131,10 @@ fn main() {
                     .map(|item| item.to_owned())
                     .collect();
                 old_frame_pixels = new_frame_pixels;
-                placer.place_batch(&different_pixels, true);
+                placer.place_batch(&different_pixels, !arguments.no_optimize);
                 std::thread::sleep(Duration::from_millis(wait_milliseconds));
             }
+            return;
         }
         Commands::DrawImage {
             image,
