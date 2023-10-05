@@ -42,7 +42,7 @@ impl Placer {
         addr
     }
 
-    pub fn place_batch(&self, batch: &Vec<Pixel>, optimize: bool) {
+    pub fn place_batch(&self, batch: &Vec<Pixel>) {
         let socket = match Socket::new(Domain::IPV6, Type::DGRAM, Some(Protocol::ICMPV6)) {
             Ok(socket) => socket,
             Err(error) => {
@@ -53,11 +53,7 @@ impl Placer {
         socket.set_nonblocking(true).unwrap();
         socket.set_send_buffer_size(usize::MAX).unwrap();
 
-        let mut pixels = batch.clone();
-        if optimize {
-            pixels = optimize_pixels(&pixels);
-        };
-        for pixel in pixels {
+        for pixel in batch {
             loop {
                 if socket
                     .send_to(
