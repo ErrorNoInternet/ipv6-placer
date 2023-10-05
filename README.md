@@ -11,4 +11,10 @@ A bot for Place: IPv6 (https://ssi.place/timr/)
 ## To-do
 - PPS limit
 - persistence
-- gradual erase
+- erase
+  - regions
+  - random
+  - sequential
+  - brightest to darkest
+- Nix flake
+- Windows support?
