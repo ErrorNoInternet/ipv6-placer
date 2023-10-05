@@ -110,6 +110,10 @@ fn main() {
                     frame_list.push(item.path().to_str().unwrap().to_string())
                 }
             }
+            if frame_list.len() == 0 {
+                println!("not enough frames!");
+                return;
+            }
             if verbose {
                 println!("sorting frame list...")
             }
