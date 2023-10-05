@@ -166,23 +166,87 @@ fn main() {
                     if verbose {
                         println!("finding changed pixels...")
                     }
-                    let different_pixels: Vec<Pixel> = new_frame_pixels
-                        .iter()
-                        .filter(|new_pixel| {
-                            old_frame_pixels.iter().any(|old_pixel| {
-                                new_pixel.x == old_pixel.x
-                                    && new_pixel.y == old_pixel.y
-                                    && new_pixel.r != old_pixel.r
-                                    && new_pixel.g != old_pixel.g
-                                    && new_pixel.b != old_pixel.b
+                    let different_pixels = Arc::new(Mutex::new(Vec::new()));
+                    let active_threads = Arc::new(Mutex::new(0));
+                    let mut current_batch = Vec::new();
+                    for new_pixel in &new_frame_pixels {
+                        current_batch.push(new_pixel.clone());
+                        if current_batch.len() > arguments.batch_size {
+                            if verbose {
+                                println!("launching new thread to find changed pixels...")
+                            }
+                            while *active_threads.lock().unwrap() > arguments.threads {
+                                std::thread::sleep(Duration::from_millis(1))
+                            }
+                            let different_pixels_arc = different_pixels.clone();
+                            let active_threads_arc = active_threads.clone();
+                            let current_batch_arc = current_batch.clone();
+                            let old_frame_pixels_arc = old_frame_pixels.clone();
+                            std::thread::spawn(move || {
+                                let different_pixels: Vec<Pixel> = current_batch_arc
+                                    .iter()
+                                    .filter(|new_pixel| {
+                                        old_frame_pixels_arc.iter().any(|old_pixel| {
+                                            new_pixel.x == old_pixel.x
+                                                && new_pixel.y == old_pixel.y
+                                                && new_pixel.r != old_pixel.r
+                                                && new_pixel.g != old_pixel.g
+                                                && new_pixel.b != old_pixel.b
+                                        })
+                                    })
+                                    .map(|item| item.to_owned())
+                                    .collect();
+                                different_pixels_arc
+                                    .lock()
+                                    .unwrap()
+                                    .extend(different_pixels);
+                                *active_threads_arc.lock().unwrap() -= 1;
+                                if verbose {
+                                    println!("thread finished!")
+                                }
+                            });
+                            *active_threads.lock().unwrap() += 1;
+                            current_batch.clear()
+                        }
+                    }
+                    while *active_threads.lock().unwrap() > arguments.threads {
+                        std::thread::sleep(Duration::from_millis(1))
+                    }
+                    let different_pixels_arc = different_pixels.clone();
+                    let active_threads_arc = active_threads.clone();
+                    let current_batch_arc = current_batch.clone();
+                    let old_frame_pixels_arc = old_frame_pixels.clone();
+                    std::thread::spawn(move || {
+                        let different_pixels: Vec<Pixel> = current_batch_arc
+                            .iter()
+                            .filter(|new_pixel| {
+                                old_frame_pixels_arc.iter().any(|old_pixel| {
+                                    new_pixel.x == old_pixel.x
+                                        && new_pixel.y == old_pixel.y
+                                        && new_pixel.r != old_pixel.r
+                                        && new_pixel.g != old_pixel.g
+                                        && new_pixel.b != old_pixel.b
+                                })
                             })
-                        })
-                        .map(|item| item.to_owned())
-                        .collect();
+                            .map(|item| item.to_owned())
+                            .collect();
+                        different_pixels_arc
+                            .lock()
+                            .unwrap()
+                            .extend(different_pixels);
+                        *active_threads_arc.lock().unwrap() -= 1;
+                        if verbose {
+                            println!("thread finished!")
+                        }
+                    });
+                    *active_threads.lock().unwrap() += 1;
+                    while *active_threads.lock().unwrap() > 0 {
+                        std::thread::sleep(Duration::from_millis(1));
+                    }
                     if verbose {
                         println!("placing changed pixels...")
                     }
-                    let mut different_pixels = different_pixels;
+                    let mut different_pixels = different_pixels.lock().unwrap().to_owned();
                     if !arguments.no_optimize {
                         if verbose {
                             println!("optimizing pixels...")
@@ -247,7 +311,7 @@ fn main() {
         if current_batch.len() >= arguments.batch_size {
             let placer_arc = placer.clone();
             let active_threads_arc = active_threads.clone();
-            let current_batch_arc = Arc::new(current_batch.clone());
+            let current_batch_arc = current_batch.clone();
             while *active_threads.lock().unwrap() > arguments.threads {
                 std::thread::sleep(Duration::from_millis(1))
             }
@@ -268,7 +332,7 @@ fn main() {
     }
     let placer_arc = placer.clone();
     let active_threads_arc = active_threads.clone();
-    let current_batch_arc = Arc::new(current_batch.clone());
+    let current_batch_arc = current_batch.clone();
     std::thread::spawn(move || {
         send_batch(
             placer_arc,
@@ -285,7 +349,7 @@ fn main() {
 
 fn send_batch(
     placer: Arc<Placer>,
-    batch: Arc<Vec<Pixel>>,
+    batch: Vec<Pixel>,
     active_threads: Arc<Mutex<usize>>,
     optimize: bool,
 ) {
