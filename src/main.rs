@@ -12,7 +12,7 @@ use std::{
 
 #[derive(Debug, Parser)]
 struct Arguments {
-    #[arg(short, long, default_value_t = 32768)]
+    #[arg(short, long, default_value_t = 4096)]
     batch_size: usize,
 
     #[arg(short, long, default_value_t = num_cpus::get())]
