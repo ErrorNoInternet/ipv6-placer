@@ -1,5 +1,6 @@
 use ipv6_placer::{build_pixels_from_image, optimize_pixels, Pixel, Placer};
 use std::{
+    collections::HashMap,
     sync::{Arc, Mutex},
     time::Duration,
 };
@@ -112,18 +113,29 @@ pub fn draw_frames(
                     let current_batch_arc = current_batch.clone();
                     let old_frame_pixels_arc = old_frame_pixels.clone();
                     std::thread::spawn(move || {
+                        let old_frame_pixels_map: HashMap<(u16, u16), (u16, u16, u16)> =
+                            old_frame_pixels_arc
+                                .iter()
+                                .map(|pixel| ((pixel.x, pixel.y), (pixel.r, pixel.g, pixel.b)))
+                                .collect();
                         let different_pixels: Vec<Pixel> = current_batch_arc
                             .iter()
-                            .filter(|new_pixel| {
-                                old_frame_pixels_arc.iter().any(|old_pixel| {
-                                    new_pixel.x == old_pixel.x
-                                        && new_pixel.y == old_pixel.y
-                                        && new_pixel.r != old_pixel.r
-                                        && new_pixel.g != old_pixel.g
-                                        && new_pixel.b != old_pixel.b
-                                })
+                            .filter_map(|new_pixel| {
+                                if let Some(old_pixel) =
+                                    old_frame_pixels_map.get(&(new_pixel.x, new_pixel.y))
+                                {
+                                    if new_pixel.r != old_pixel.0
+                                        || new_pixel.g != old_pixel.1
+                                        || new_pixel.b != old_pixel.2
+                                    {
+                                        Some(new_pixel.to_owned())
+                                    } else {
+                                        None
+                                    }
+                                } else {
+                                    None
+                                }
                             })
-                            .map(|item| item.to_owned())
                             .collect();
                         different_pixels_arc
                             .lock()
