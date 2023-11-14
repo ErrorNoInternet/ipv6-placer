@@ -1,13 +1,12 @@
-use std::net::{Ipv6Addr, SocketAddrV6};
-
 use socket2::{Domain, Protocol, Socket, Type};
+use std::net::{Ipv6Addr, SocketAddrV6};
 
 #[derive(Debug)]
 pub enum PlacerError {
     OpenImageFailed(image::ImageError),
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Pixel {
     pub x: u16,
     pub y: u16,
@@ -95,62 +94,52 @@ pub fn build_pixels_from_image(
     Ok(pixels)
 }
 
+use std::collections::HashSet;
+
 pub fn optimize_pixels(pixels: &Vec<Pixel>) -> Vec<Pixel> {
     let mut optimized_pixels = Vec::new();
-    let mut ignored = Vec::new();
+    let mut ignored = HashSet::new();
+    let mut neighbors = Vec::new();
+
     for pixel in pixels {
         if ignored.contains(pixel) {
             continue;
         }
-        let mut neighbors = Vec::new();
-        let mut big = false;
 
-        let expected_neighbor0 = Pixel {
-            x: pixel.x + 1,
-            y: pixel.y,
-            r: pixel.r,
-            g: pixel.g,
-            b: pixel.b,
-            big: pixel.big,
-        };
-        if pixels.contains(&expected_neighbor0) {
-            neighbors.push(expected_neighbor0)
-        }
-        let expected_neighbor1 = Pixel {
-            x: pixel.x,
-            y: pixel.y + 1,
-            r: pixel.r,
-            g: pixel.g,
-            b: pixel.b,
-            big: pixel.big,
-        };
-        if pixels.contains(&expected_neighbor1) {
-            neighbors.push(expected_neighbor1)
-        }
-        let expected_neighbor2 = Pixel {
-            x: pixel.x + 1,
-            y: pixel.y + 1,
-            r: pixel.r,
-            g: pixel.g,
-            b: pixel.b,
-            big: pixel.big,
-        };
-        if pixels.contains(&expected_neighbor2) {
-            neighbors.push(expected_neighbor2)
+        let mut big = false;
+        neighbors.clear();
+
+        let expected_neighbors = [
+            Pixel {
+                x: pixel.x + 1,
+                y: pixel.y,
+                ..*pixel
+            },
+            Pixel {
+                x: pixel.x,
+                y: pixel.y + 1,
+                ..*pixel
+            },
+            Pixel {
+                x: pixel.x + 1,
+                y: pixel.y + 1,
+                ..*pixel
+            },
+        ];
+
+        for neighbor in &expected_neighbors {
+            if pixels.contains(neighbor) {
+                neighbors.push(*neighbor);
+            }
         }
 
         if neighbors.len() == 3 {
-            ignored.extend(neighbors);
+            ignored.extend(neighbors.drain(..));
             big = true;
         }
-        optimized_pixels.push(Pixel {
-            x: pixel.x,
-            y: pixel.y,
-            r: pixel.r,
-            g: pixel.g,
-            b: pixel.b,
-            big,
-        })
+
+        optimized_pixels.push(Pixel { big, ..*pixel });
     }
+
     optimized_pixels
 }
