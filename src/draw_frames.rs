@@ -184,15 +184,15 @@ pub fn draw_frames(
             while *active_threads.lock().unwrap() > 0 {
                 std::thread::sleep(Duration::from_millis(1));
             }
-            if verbose {
-                println!("placing changed pixels...")
-            }
             let mut different_pixels = different_pixels.lock().unwrap().to_owned();
             if !no_optimize {
                 if verbose {
                     println!("optimizing pixels...")
                 }
                 different_pixels = optimize_pixels(&different_pixels);
+            }
+            if verbose {
+                println!("placing changed pixels...")
             }
             placer.place_batch(&different_pixels);
         }
