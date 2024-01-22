@@ -1,4 +1,5 @@
 use socket2::{Domain, Protocol, Socket, Type};
+use std::collections::HashSet;
 use std::net::{Ipv6Addr, SocketAddrV6};
 
 #[derive(Debug)]
@@ -94,8 +95,6 @@ pub fn build_pixels_from_image(
     Ok(pixels)
 }
 
-use std::collections::HashSet;
-
 pub fn optimize_pixels(pixels: &Vec<Pixel>) -> Vec<Pixel> {
     let mut optimized_pixels = Vec::new();
     let mut ignored = HashSet::new();
@@ -108,7 +107,6 @@ pub fn optimize_pixels(pixels: &Vec<Pixel>) -> Vec<Pixel> {
 
         let mut big = false;
         neighbors.clear();
-
         let expected_neighbors = [
             Pixel {
                 x: pixel.x + 1,
@@ -126,13 +124,11 @@ pub fn optimize_pixels(pixels: &Vec<Pixel>) -> Vec<Pixel> {
                 ..*pixel
             },
         ];
-
         for neighbor in &expected_neighbors {
             if pixels.contains(neighbor) {
                 neighbors.push(*neighbor);
             }
         }
-
         if neighbors.len() == 3 {
             ignored.extend(neighbors.drain(..));
             big = true;
@@ -140,6 +136,5 @@ pub fn optimize_pixels(pixels: &Vec<Pixel>) -> Vec<Pixel> {
 
         optimized_pixels.push(Pixel { big, ..*pixel });
     }
-
     optimized_pixels
 }
