@@ -6,7 +6,10 @@ use clap::{Parser, Subcommand};
 use ipv6_placer::{optimize_pixels, Pixel, Placer};
 use std::{
     net::Ipv6Addr,
-    sync::{Arc, Mutex},
+    sync::{
+        atomic::{AtomicUsize, Ordering::SeqCst},
+        Arc,
+    },
     time::Duration,
 };
 
@@ -131,12 +134,12 @@ fn main() {
         } => pixels.extend(pixels::draw(start_x, start_y, end_x, end_y, color)),
     }
 
-    let active_threads = Arc::new(Mutex::new(0));
+    let active_threads = Arc::new(AtomicUsize::new(0));
     for current_batch in pixels.chunks(arguments.batch_size) {
-        let placer_arc = placer.clone();
         let active_threads_arc = active_threads.clone();
+        let placer_arc = placer.clone();
         let current_batch_arc = current_batch.to_owned();
-        while *active_threads.lock().unwrap() > arguments.threads {
+        while active_threads.load(SeqCst) > arguments.threads {
             std::thread::sleep(Duration::from_millis(1));
         }
         std::thread::spawn(move || {
@@ -147,12 +150,9 @@ fn main() {
                 !arguments.no_optimize,
             );
         });
-        *active_threads.lock().unwrap() += 1;
-        while *active_threads.lock().unwrap() > arguments.threads {
-            std::thread::sleep(Duration::from_millis(1));
-        }
+        active_threads.fetch_add(1, SeqCst);
     }
-    while *active_threads.lock().unwrap() > 0 {
+    while active_threads.load(SeqCst) > 0 {
         std::thread::sleep(Duration::from_millis(1));
     }
 }
@@ -160,7 +160,7 @@ fn main() {
 fn place_batch(
     placer: &Arc<Placer>,
     batch: Vec<Pixel>,
-    active_threads: &Arc<Mutex<usize>>,
+    active_threads: &Arc<AtomicUsize>,
     optimize: bool,
 ) {
     let mut pixels = batch;
@@ -168,5 +168,5 @@ fn place_batch(
         pixels = optimize_pixels(&pixels);
     }
     placer.place_batch(&pixels);
-    *active_threads.lock().unwrap() -= 1;
+    active_threads.fetch_sub(1, SeqCst);
 }
