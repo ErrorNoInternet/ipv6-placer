@@ -3,6 +3,13 @@ name = "ipv6-placer"
 version = "0.1.0"
 edition = "2021"
 
+[profile.release]
+codegen-units = 1
+lto = true
+overflow-checks = false
+panic = "abort"
+strip = "symbols"
+
 [dependencies]
 clap = { version = "4.4.6", features = ["derive"] }
 image = "0.24.7"
