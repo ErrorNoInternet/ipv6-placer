@@ -25,6 +25,9 @@ struct Arguments {
     no_optimize: bool,
 
     #[arg(short, long)]
+    forever: bool,
+
+    #[arg(short, long)]
     verbose: bool,
 
     #[command(subcommand)]
@@ -135,25 +138,28 @@ fn main() {
     }
 
     let active_threads = Arc::new(AtomicUsize::new(0));
-    for current_batch in pixels.chunks(arguments.batch_size) {
-        let active_threads_arc = active_threads.clone();
-        let placer_arc = placer.clone();
-        let current_batch_arc = current_batch.to_owned();
-        while active_threads.load(SeqCst) > arguments.threads {
-            std::thread::sleep(Duration::from_millis(1));
+    loop {
+        for batch in pixels.chunks(arguments.batch_size) {
+            let active_threads_arc = active_threads.clone();
+            let placer_arc = placer.clone();
+            let batch_arc = batch.to_owned();
+            while active_threads.load(SeqCst) > arguments.threads {
+                std::thread::sleep(Duration::from_millis(1));
+            }
+            std::thread::spawn(move || {
+                place_batch(
+                    &placer_arc,
+                    batch_arc,
+                    &active_threads_arc,
+                    !arguments.no_optimize,
+                );
+            });
+            active_threads.fetch_add(1, SeqCst);
         }
-        std::thread::spawn(move || {
-            place_batch(
-                &placer_arc,
-                current_batch_arc,
-                &active_threads_arc,
-                !arguments.no_optimize,
-            );
-        });
-        active_threads.fetch_add(1, SeqCst);
-    }
-    while active_threads.load(SeqCst) > 0 {
-        std::thread::sleep(Duration::from_millis(1));
+
+        if !arguments.forever {
+            break;
+        }
     }
 }
 
