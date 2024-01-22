@@ -27,19 +27,20 @@ impl Placer {
         Self { address }
     }
 
+    #[inline]
     pub fn build_address(&self, pixel: &Pixel) -> Ipv6Addr {
         let address_segments = self.address.segments();
-        let addr = Ipv6Addr::new(
+
+        Ipv6Addr::new(
             address_segments[0],
             address_segments[1],
             address_segments[2],
             address_segments[3],
-            (pixel.big as u16 + 1) << 12 | pixel.x,
+            (u16::from(pixel.big) + 1) << 12 | pixel.x,
             pixel.y,
-            pixel.r as u16,
+            pixel.r,
             (pixel.g << 8) | pixel.b,
-        );
-        addr
+        )
     }
 
     pub fn place_batch(&self, batch: &Vec<Pixel>) {
@@ -58,7 +59,7 @@ impl Placer {
                 if socket
                     .send_to(
                         &[0x80, 0, 0, 0, 0, 0, 0, 0],
-                        &SocketAddrV6::new(self.build_address(&pixel), 0, 0, 0).into(),
+                        &SocketAddrV6::new(self.build_address(pixel), 0, 0, 0).into(),
                     )
                     .is_ok()
                 {
@@ -83,13 +84,13 @@ pub fn build_pixels_from_image(
         let color = color.0;
         if color[3] != 0 {
             pixels.push(Pixel {
-                x: (x + x_offset) as u16,
-                y: (y + y_offset) as u16,
-                r: color[0] as u16,
-                g: color[1] as u16,
-                b: color[2] as u16,
+                x: u16::try_from(x + x_offset).unwrap(),
+                y: u16::try_from(y + y_offset).unwrap(),
+                r: u16::from(color[0]),
+                g: u16::from(color[1]),
+                b: u16::from(color[2]),
                 big: false,
-            })
+            });
         }
     }
     Ok(pixels)

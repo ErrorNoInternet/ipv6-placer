@@ -1,6 +1,6 @@
-mod draw_frames;
-mod draw_image;
-mod draw_pixels;
+mod frames;
+mod image;
+mod pixels;
 
 use clap::{Parser, Subcommand};
 use ipv6_placer::{optimize_pixels, Pixel, Placer};
@@ -95,12 +95,12 @@ fn main() {
             no_deltas,
             wait_milliseconds,
         } => {
-            draw_frames::draw_frames(
+            frames::draw(
                 verbose,
                 arguments.no_optimize,
                 arguments.batch_size,
                 arguments.threads,
-                placer,
+                &placer,
                 frames_path,
                 frame_x_offset,
                 frame_y_offset,
@@ -113,7 +113,7 @@ fn main() {
             image,
             image_x_offset,
             image_y_offset,
-        } => match draw_image::draw_image(image, image_x_offset, image_y_offset) {
+        } => match image::draw(&image, image_x_offset, image_y_offset) {
             Ok(image_pixels) => pixels.extend(image_pixels),
             Err(error) => {
                 println!("unable to read image: {error:?}");
@@ -126,9 +126,7 @@ fn main() {
             end_x,
             end_y,
             color,
-        } => pixels.extend(draw_pixels::draw_pixels(
-            start_x, start_y, end_x, end_y, color,
-        )),
+        } => pixels.extend(pixels::draw(start_x, start_y, end_x, end_y, color)),
     }
 
     let active_threads = Arc::new(Mutex::new(0));
@@ -140,33 +138,33 @@ fn main() {
             let active_threads_arc = active_threads.clone();
             let current_batch_arc = current_batch.clone();
             while *active_threads.lock().unwrap() > arguments.threads {
-                std::thread::sleep(Duration::from_millis(1))
+                std::thread::sleep(Duration::from_millis(1));
             }
             std::thread::spawn(move || {
                 place_batch(
-                    placer_arc,
+                    &placer_arc,
                     current_batch_arc,
-                    active_threads_arc,
+                    &active_threads_arc,
                     !arguments.no_optimize,
-                )
+                );
             });
             *active_threads.lock().unwrap() += 1;
-            current_batch.clear()
+            current_batch.clear();
         }
     }
     while *active_threads.lock().unwrap() > arguments.threads {
-        std::thread::sleep(Duration::from_millis(1))
+        std::thread::sleep(Duration::from_millis(1));
     }
     let placer_arc = placer.clone();
     let active_threads_arc = active_threads.clone();
     let current_batch_arc = current_batch.clone();
     std::thread::spawn(move || {
         place_batch(
-            placer_arc,
+            &placer_arc,
             current_batch_arc,
-            active_threads_arc,
+            &active_threads_arc,
             !arguments.no_optimize,
-        )
+        );
     });
     *active_threads.lock().unwrap() += 1;
     while *active_threads.lock().unwrap() > 0 {
@@ -175,14 +173,14 @@ fn main() {
 }
 
 fn place_batch(
-    placer: Arc<Placer>,
+    placer: &Arc<Placer>,
     batch: Vec<Pixel>,
-    active_threads: Arc<Mutex<usize>>,
+    active_threads: &Arc<Mutex<usize>>,
     optimize: bool,
 ) {
     let mut pixels = batch;
     if optimize {
-        pixels = optimize_pixels(&pixels).into();
+        pixels = optimize_pixels(&pixels);
     }
     placer.place_batch(&pixels);
     *active_threads.lock().unwrap() -= 1;
