@@ -109,6 +109,7 @@ fn main() {
             );
             return;
         }
+
         Commands::Image {
             image,
             image_x_offset,
@@ -116,10 +117,11 @@ fn main() {
         } => match image::draw(&image, image_x_offset, image_y_offset) {
             Ok(image_pixels) => pixels.extend(image_pixels),
             Err(error) => {
-                println!("unable to read image: {error:?}");
+                eprintln!("unable to read image: {error:?}");
                 return;
             }
         },
+
         Commands::Pixels {
             start_x,
             start_y,
