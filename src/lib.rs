@@ -56,11 +56,9 @@ impl Placer {
 
         for pixel in batch {
             loop {
+                let address = &SocketAddrV6::new(self.build_address(pixel), 0, 0, 0).into();
                 if socket
-                    .send_to(
-                        &[0x80, 0, 0, 0, 0, 0, 0, 0],
-                        &SocketAddrV6::new(self.build_address(pixel), 0, 0, 0).into(),
-                    )
+                    .send_to(&[0x80, 0, 0, 0, 0, 0, 0, 0], address)
                     .is_ok()
                 {
                     break;
