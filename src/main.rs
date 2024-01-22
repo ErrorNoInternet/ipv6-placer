@@ -130,43 +130,26 @@ fn main() {
     }
 
     let active_threads = Arc::new(Mutex::new(0));
-    let mut current_batch = Vec::new();
-    for pixel in pixels {
-        current_batch.push(pixel);
-        if current_batch.len() >= arguments.batch_size {
-            let placer_arc = placer.clone();
-            let active_threads_arc = active_threads.clone();
-            let current_batch_arc = current_batch.clone();
-            while *active_threads.lock().unwrap() > arguments.threads {
-                std::thread::sleep(Duration::from_millis(1));
-            }
-            std::thread::spawn(move || {
-                place_batch(
-                    &placer_arc,
-                    current_batch_arc,
-                    &active_threads_arc,
-                    !arguments.no_optimize,
-                );
-            });
-            *active_threads.lock().unwrap() += 1;
-            current_batch.clear();
+    for current_batch in pixels.chunks(arguments.batch_size) {
+        let placer_arc = placer.clone();
+        let active_threads_arc = active_threads.clone();
+        let current_batch_arc = current_batch.to_owned();
+        while *active_threads.lock().unwrap() > arguments.threads {
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        std::thread::spawn(move || {
+            place_batch(
+                &placer_arc,
+                current_batch_arc,
+                &active_threads_arc,
+                !arguments.no_optimize,
+            );
+        });
+        *active_threads.lock().unwrap() += 1;
+        while *active_threads.lock().unwrap() > arguments.threads {
+            std::thread::sleep(Duration::from_millis(1));
         }
     }
-    while *active_threads.lock().unwrap() > arguments.threads {
-        std::thread::sleep(Duration::from_millis(1));
-    }
-    let placer_arc = placer.clone();
-    let active_threads_arc = active_threads.clone();
-    let current_batch_arc = current_batch.clone();
-    std::thread::spawn(move || {
-        place_batch(
-            &placer_arc,
-            current_batch_arc,
-            &active_threads_arc,
-            !arguments.no_optimize,
-        );
-    });
-    *active_threads.lock().unwrap() += 1;
     while *active_threads.lock().unwrap() > 0 {
         std::thread::sleep(Duration::from_millis(1));
     }
