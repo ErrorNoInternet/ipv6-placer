@@ -154,12 +154,14 @@ fn main() {
                     !arguments.no_optimize,
                 );
             });
-            active_threads.fetch_add(1, SeqCst);
         }
 
         if !arguments.forever {
             break;
         }
+    }
+    while active_threads.load(SeqCst) > 0 {
+        std::thread::sleep(Duration::from_millis(1));
     }
 }
 
@@ -169,10 +171,13 @@ fn place_batch(
     active_threads: &Arc<AtomicUsize>,
     optimize: bool,
 ) {
+    active_threads.fetch_add(1, SeqCst);
+
     let mut pixels = batch;
     if optimize {
         pixels = optimize_pixels(&pixels);
     }
     placer.place_batch(&pixels);
+
     active_threads.fetch_sub(1, SeqCst);
 }
