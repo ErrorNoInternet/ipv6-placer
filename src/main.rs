@@ -31,7 +31,7 @@ struct Arguments {
 #[derive(Debug, Subcommand)]
 enum Commands {
     #[command(arg_required_else_help = true)]
-    DrawFrames {
+    Frames {
         #[arg(short, long)]
         frames_path: String,
 
@@ -49,7 +49,7 @@ enum Commands {
     },
 
     #[command(arg_required_else_help = true)]
-    DrawImage {
+    Image {
         #[arg(short, long)]
         image: String,
 
@@ -61,7 +61,7 @@ enum Commands {
     },
 
     #[command(arg_required_else_help = true)]
-    DrawPixels {
+    Pixels {
         #[arg(long)]
         start_x: u32,
 
@@ -88,7 +88,7 @@ fn main() {
     )));
     let mut pixels = Vec::new();
     match arguments.command {
-        Commands::DrawFrames {
+        Commands::Frames {
             frames_path,
             frame_x_offset,
             frame_y_offset,
@@ -109,7 +109,7 @@ fn main() {
             );
             return;
         }
-        Commands::DrawImage {
+        Commands::Image {
             image,
             image_x_offset,
             image_y_offset,
@@ -120,7 +120,7 @@ fn main() {
                 return;
             }
         },
-        Commands::DrawPixels {
+        Commands::Pixels {
             start_x,
             start_y,
             end_x,
