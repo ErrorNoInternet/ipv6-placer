@@ -92,7 +92,7 @@ fn main() {
     let placer = Arc::new(Placer::new(Ipv6Addr::new(
         0x2a01, 0x4f8, 0xc012, 0xf8e6, 0, 0, 0, 0,
     )));
-    let mut pixels = Vec::new();
+    let mut pixels = Vec::with_capacity(512);
     match arguments.command {
         Commands::Frames {
             frames_path,

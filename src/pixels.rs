@@ -1,7 +1,7 @@
 use ipv6_placer::Pixel;
 
 pub fn draw(start_x: u32, start_y: u32, end_x: u32, end_y: u32, color: u32) -> Vec<Pixel> {
-    let mut pixels = Vec::new();
+    let mut pixels = Vec::with_capacity(512 * 512);
     for x in start_x..end_x {
         for y in start_y..end_y {
             let r = (color >> 16) & 0xFF;

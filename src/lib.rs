@@ -73,7 +73,7 @@ pub fn build_pixels_from_image(
     x_offset: u32,
     y_offset: u32,
 ) -> Result<Vec<Pixel>, PlacerError> {
-    let mut pixels = Vec::new();
+    let mut pixels = Vec::with_capacity(512 * 512);
     let image_object = match image::open(image_path) {
         Ok(image_object) => image_object.into_rgba8(),
         Err(error) => return Err(PlacerError::OpenImageFailed(error)),
@@ -95,9 +95,9 @@ pub fn build_pixels_from_image(
 }
 
 pub fn optimize_pixels(pixels: &Vec<Pixel>) -> Vec<Pixel> {
-    let mut optimized_pixels = Vec::new();
-    let mut ignored = HashSet::new();
-    let mut neighbors = Vec::new();
+    let mut optimized_pixels = Vec::with_capacity(pixels.len());
+    let mut ignored = HashSet::with_capacity(pixels.len());
+    let mut neighbors = Vec::with_capacity(3);
 
     for pixel in pixels {
         if ignored.contains(pixel) {

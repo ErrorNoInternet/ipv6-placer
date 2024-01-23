@@ -96,9 +96,9 @@ pub fn draw(
             if verbose {
                 println!("finding changed pixels...");
             }
-            let different_pixels = Arc::new(Mutex::new(Vec::new()));
+            let different_pixels = Arc::new(Mutex::new(Vec::with_capacity(512 * 512)));
             let active_threads = Arc::new(Mutex::new(0));
-            let mut current_batch = Vec::new();
+            let mut current_batch = Vec::with_capacity(batch_size);
             for new_pixel in &new_frame_pixels {
                 current_batch.push(*new_pixel);
                 if current_batch.len() > batch_size {
