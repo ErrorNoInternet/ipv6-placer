@@ -105,7 +105,7 @@ pub fn draw(
                     if verbose {
                         println!("launching new thread to find changed pixels...");
                     }
-                    while *active_threads.lock().unwrap() > threads {
+                    while *active_threads.lock().unwrap() >= threads {
                         std::thread::sleep(Duration::from_millis(1));
                     }
                     let different_pixels_arc = different_pixels.clone();
@@ -150,7 +150,7 @@ pub fn draw(
                     current_batch.clear();
                 }
             }
-            while *active_threads.lock().unwrap() > threads {
+            while *active_threads.lock().unwrap() >= threads {
                 std::thread::sleep(Duration::from_millis(1));
             }
             let different_pixels_arc = different_pixels.clone();

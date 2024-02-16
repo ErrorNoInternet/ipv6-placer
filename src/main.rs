@@ -143,7 +143,7 @@ fn main() {
             let active_threads_arc = active_threads.clone();
             let placer_arc = placer.clone();
             let batch_arc = batch.to_owned();
-            while active_threads.load(SeqCst) > arguments.threads {
+            while active_threads.load(SeqCst) >= arguments.threads {
                 std::thread::sleep(Duration::from_millis(1));
             }
             std::thread::spawn(move || {
