@@ -36,15 +36,15 @@ struct Arguments {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
-    #[command(arg_required_else_help = true)]
+    #[command(arg_required_else_help = true, visible_aliases = ["f"])]
     Frames {
         #[arg(short, long)]
         frames_path: String,
 
-        #[arg(long, default_value_t = 0, requires = "frames_path")]
+        #[arg(short = 'x', long, default_value_t = 0, requires = "frames_path")]
         frame_x_offset: u32,
 
-        #[arg(long, default_value_t = 0, requires = "frames_path")]
+        #[arg(short = 'y', long, default_value_t = 0, requires = "frames_path")]
         frame_y_offset: u32,
 
         #[arg(short, long, requires = "frames_path")]
@@ -54,30 +54,30 @@ enum Commands {
         wait_milliseconds: u64,
     },
 
-    #[command(arg_required_else_help = true)]
+    #[command(arg_required_else_help = true, visible_aliases = ["i"])]
     Image {
         #[arg(short, long)]
         image: String,
 
-        #[arg(long, default_value_t = 0, requires = "image")]
+        #[arg(short = 'x', long, default_value_t = 0, requires = "image")]
         image_x_offset: u32,
 
-        #[arg(long, default_value_t = 0, requires = "image")]
+        #[arg(short = 'y', long, default_value_t = 0, requires = "image")]
         image_y_offset: u32,
     },
 
-    #[command(arg_required_else_help = true)]
+    #[command(arg_required_else_help = true, visible_aliases = ["p"])]
     Pixels {
-        #[arg(long)]
+        #[arg(short = 'x', long)]
         start_x: u32,
 
-        #[arg(long)]
+        #[arg(short = 'y', long)]
         start_y: u32,
 
-        #[arg(long)]
+        #[arg(short = 'X', long)]
         end_x: u32,
 
-        #[arg(long)]
+        #[arg(short = 'Y', long)]
         end_y: u32,
 
         #[arg(short, long, default_value_t = 0)]
